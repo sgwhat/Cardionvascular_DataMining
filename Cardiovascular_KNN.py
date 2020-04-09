@@ -17,6 +17,7 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import roc_curve #for model evaluation
 from sklearn.tree import export_graphviz #plot tree
 from sklearn.model_selection import KFold
+from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix #for model evaluation
 from sklearn.metrics import classification_report
 from sklearn.metrics import precision_recall_curve #for model evaluation
@@ -45,13 +46,10 @@ print(data.dtypes)
 #KNN
 y = data['cardio']
 x = data.drop(['cardio'], axis = 1)
-#x = data.iloc[:, 0:11]
-#y = data.iloc[:, 11]
 x_train, x_test, y_train, y_test = train_test_split(data.drop('cardio', 1), data['cardio'], test_size = .2, random_state=10) #split the data
-#print("Shape of X: {}, Shape of Y: {}".format(x.shape, y.shape))
-#x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.33, random_state = 0)
 
-knn_scores = []
+
+knn_scores = [] #accuracy
 for k in range(1,21):
     knn_classifier = KNeighborsClassifier(n_neighbors = k)
     knn_classifier.fit(x_train, y_train)
@@ -64,20 +62,27 @@ plt.xlabel('Number of Neighbors (K)')
 plt.ylabel('Scores')
 plt.title('K Neighbors Classifier scores for different K values')
 #plt.show()
-print("The score for K Neighbors Classifier is {}% with {} nieghbors.".format(knn_scores[7], 19))
+print("The Accuracy for K Neighbors Classifier is {}% with {} nieghbors.".format(knn_scores[7], 19))
 
 kfold = KFold(n_splits=10)  # 将数据集分成十份，进行10折交叉验证: 其中1份作为交叉验证集计算模型准确性，剩余9份作为训练集进行训练
 cv_result = cross_val_score(knn_classifier, x, y, cv=kfold)
-print("cross val score=", cv_result.mean())
+print("cv_score=", cv_result.mean())
 
 y_predict_knn = knn_classifier.predict(x_test)
 f1_score(y_test,y_predict_knn)
 print(classification_report(y_test,y_predict_knn))
 
 confusion_matrix = confusion_matrix(y_test,y_predict_knn)
-confusion_matrix
+print(confusion_matrix)
 print('confusion_matrix:\n' , confusion_matrix)
 y_probabilities = knn_classifier.predict_proba(x_test)[:,1]
+
+knn_result = accuracy_score(y_test,y_predict_knn)
+print(knn_result)
+
+recall_knn = confusion_matrix[0][0]/(confusion_matrix[0][0] + confusion_matrix[0][1])
+precision_knn = confusion_matrix[0][0]/(confusion_matrix[0][0]+confusion_matrix[1][1])
+print("Recall:",recall_knn,"Precision:",precision_knn)
 
 precisions,recalls,thresholds = precision_recall_curve(y_test,y_probabilities)
 
